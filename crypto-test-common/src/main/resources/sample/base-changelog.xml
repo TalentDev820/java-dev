@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <!--
+     Postgres blobs are a mess.
+
+     The JDBC "BLOB" type in Postgres is actually a special OID (Object ID) long value
+     that points to separate storage for the data. These blobs suck.
+         * You must disable auto-commit to use this type
+         * In JDBC you have to use the Postgres driver's Large Object API
+         * You can't just null out the blob; you must explicitly delete the
+           object in the separate storage using a different Postgres API call.
+           This is a potentially huge security issue.
+         * The JDBC type is actually Types.BIGINT since what's stored is a long id
+         * The JDBC ResultSetMetaData typeName is "oid"
+         * The JDBC ResultSetMetaData typeClass is Long.class
+         * This is the type used by Hibernate if you annotate a byte[] field with @Lob
+         * Use "BLOB" in Liquibase column definition
+         * Use Hibernate MaterializedBlobType
+
+     On the other hand, Postgres BYTEA (byte array) blobs behave almost exactly like
+     a regular blob that is stored in your main entity table:
+         * No auto-commit restrictions
+         * JDBC code can just use getBytes/setBytes, no special API needed
+         * You can just null out the blob value
+         * The JDBC type is Types.BINARY
+         * The JDBC ResultSetMetaData typeName is "bytea"
+         * The JDBC ResultSetMetaData typeClass is byte[].class
+         * This is the type Hibernate uses if you omit @Lob with a byte[] field
+         * Use "BYTEA" in Liquibase column definition
+         * Use Hibernate BinaryType (this is the EncryptedType's default for ciphertext)
+
+     Since "BLOB" means "OID blob" to postgres, declaring a column type as "BLOB" will
+     work testing across all database types.
+
+     To test OID blobs, we use this "BLOB_or_BYTEA" hack to declare OID for Postgres
+     but BLOB for all other databases. In the code, you must also specify the
+     Hibernate type as "MaterializedBlobType".
+    -->
+    <property name="BLOB_or_BYTEA" value="BLOB" dbms="h2"/>
+    <property name="BLOB_or_BYTEA" value="BLOB" dbms="oracle"/>
+    <property name="BLOB_or_BYTEA" value="BLOB" dbms="mssql"/>
+    <property name="BLOB_or_BYTEA" value="BYTEA" dbms="postgresql"/>
+
+    <changeSet author="Service Archetype" id="create initial tables">
+        <createTable tableName="COMPANY">
+            <column name="ID" autoIncrement="true" type="BIGINT UNSIGNED">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+            <column name="TENANT" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME_ENC" type="${BLOB_or_BYTEA}">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME_ENC_HDR" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ENCRYPTION_JOB_ID" type="VARCHAR(32)" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="PERSON">
+            <column name="ID" autoIncrement="true" type="BIGINT UNSIGNED">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+            <column name="TENANT" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COMPANY_ID" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_person_company" references="COMPANY(id)"/>
+            </column>
+            <column name="PREV_COMPANY_ID" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_person_prev_company" references="COMPANY(id)"/>
+            </column>
+
+            <!-- Make sure TEXT types work correctly with the default Hibernate StringType -->
+            <column name="NAME" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME_ENC" type="${BLOB_or_BYTEA}">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME_ENC_HDR" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="PLAINTEXT" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PLAINTEXT_ENC" type="${BLOB_or_BYTEA}">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PLAINTEXT_ENC_HDR" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="EMAIL_ENC" type="${BLOB_or_BYTEA}">
+                <constraints nullable="true"/>
+            </column>
+            <column name="EMAIL_ENC_HDR" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Even Postgres blobs should work with Hibernate's Binary Type -->
+            <column name="JSON" type="BLOB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="JSON_ENC" type="BLOB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="JSON_ENC_HDR" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="VERSION" type="SMALLINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MODIFIED_DTTM" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ENCRYPTION_JOB_ID" type="VARCHAR(32)" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="PHONE">
+            <column name="ID" autoIncrement="true" type="BIGINT UNSIGNED">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+
+            <column name="PERSON_ID" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_phone_person" references="PERSON(id)"/>
+            </column>
+            <column name="PHONE_NUMBER" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PHONE_NUMBER_ENC" type="BLOB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="PHONE_NUMBER_ENC_HDR" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="COMPANY_PERSON">
+            <column name="PERSON_ID" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pc_person" references="PERSON(id)"/>
+            </column>
+            <column name="COMPANY_ID" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_pc_company" references="COMPANY(id)"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="NO_ENCRYPTION">
+            <column name="ID" autoIncrement="true" type="BIGINT UNSIGNED">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+            <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createTable remarks="Stores NoTenantEntity" tableName="NO_TENANT">
+            <column name="ID" autoIncrement="true" remarks="Database primary key" type="BIGINT UNSIGNED">
+                <constraints nullable="false" primaryKey="true" />
+            </column>
+            <column name="VERSION" type="SMALLINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MODIFIED_DTTM" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="NAME" remarks="Name" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME_ENC" type="${BLOB_or_BYTEA}">
+                <constraints nullable="true"/>
+            </column>
+            <column name="NAME_ENC_HDR" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Service Archetype" id="add primary key">
+        <addPrimaryKey columnNames="PERSON_ID, COMPANY_ID"
+                       constraintName="PK_COMPANY_PERSON"
+                       tableName="COMPANY_PERSON"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %level %logger{0} - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <!-- Setting showSQL=true in test.properties will also log SQL directly to stdout -->
+    <!--    <logger name="org.hibernate.SQL" level="TRACE"/>-->
+    <!--    <logger name="org.hibernate.type" level="TRACE"/>-->
+    <!--    <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/>-->
+    <!--    <logger name="org.hibernate.engine.query.spi.QueryPlanCache" level="TRACE"/>-->
+    <logger name="org.hibernate.engine.transaction.internal.TransactionImpl" level="DEBUG"/>
+    <logger name="org.hibernate.resource.transaction" level="DEBUG"/>
+    <!--    <logger name="org.hibernate.resource.jdbc" level="DEBUG"/>-->
+    <logger name="org.hibernate.internal.SessionImpl" level="DEBUG"/>
+    <logger name="org.hibernate.internal.SessionFactoryImpl" level="DEBUG"/>
+
+    <!-- Enable for VaultTemplate/RestTemplate debug logging -->
+    <!--    <logger name="org.springframework.web.client" level="DEBUG"/>-->
+
+    <logger name="com.r.crypto" level="INFO"/>
+    <logger name="com.r.crypto.provider.cipher.LocalKmsEncryptionProvider" level="INFO"/>
+    <logger name="com.r.crypto.encryption.jobs.EncryptedTablePersistence" level="TRACE"/>
+    <logger name="com.r.crypto.encryption.hibernate.EncryptedEntityListener" level="TRACE"/>
+    <logger name="com.r.crypto.encryption.hibernate.EntityEncryptionService" level="DEBUG"/>
+    <!--    <logger name="com.r.crypto.encryption.hibernate.EncryptedType" level="TRACE"/>-->
+    <!--    <logger name="com.r.crypto.encryption.hibernate.DebugInterceptor" level="TRACE"/>-->
+    <!--    <logger name="com.r.crypto.encryption.hibernate.EntityCrawler" level="TRACE"/>-->
+    <logger name="com.r.crypto.encryption.hibernate.SerializedEncryptedObject" level="TRACE"/>
+    <logger name="com.r.crypto.encryption.api.provider.EncryptionMetricsProvider" level="TRACE"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
