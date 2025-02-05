@@ -2,14 +2,14 @@ package com.r.crypto.encryption.hibernate;
 
 import com.r.crypto.api.TenantConverter;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;

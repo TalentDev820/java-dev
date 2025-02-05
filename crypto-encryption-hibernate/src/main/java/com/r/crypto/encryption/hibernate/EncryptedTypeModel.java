@@ -3,7 +3,7 @@ package com.r.crypto.encryption.hibernate;
 import com.r.crypto.encryption.exception.RCryptoEncryptionException;
 import org.hibernate.type.Type;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import java.lang.reflect.Field;
 
 import static com.r.crypto.util.ExceptionWrapper.wrap;
