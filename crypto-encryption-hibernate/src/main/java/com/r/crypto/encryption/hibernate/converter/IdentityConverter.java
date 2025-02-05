@@ -1,6 +1,6 @@
 package com.r.crypto.encryption.hibernate.converter;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 public class IdentityConverter implements AttributeConverter<Object, Object> {
     @Override

@@ -1,9 +1,9 @@
 package com.r.crypto.encryption.hibernate;
 
 import com.r.crypto.encryption.exception.RCryptoEncryptionException;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import java.lang.reflect.Field;
 
 import static com.r.crypto.util.ExceptionWrapper.wrap;
@@ -21,15 +21,15 @@ public class EncryptedTypeModel {
     protected boolean mutable;
 
     protected String plaintextColumnName;
-    protected Type plaintextColumnType;
+    protected JdbcType plaintextColumnType;
     protected int plaintextColumnIndex;
 
     protected String ciphertextColumnName;
-    protected Type ciphertextColumnType;
+    protected JdbcType ciphertextColumnType;
     protected int ciphertextColumnIndex;
 
     protected String ciphertextHeaderColumnName;
-    protected Type ciphertextHeaderColumnType;
+    protected JdbcType ciphertextHeaderColumnType;
     protected int ciphertextHeaderColumnIndex;
 
     protected AttributeConverter<Object, byte[]> bytesConverter;
@@ -109,11 +109,11 @@ public class EncryptedTypeModel {
         this.plaintextColumnName = plaintextColumnName;
     }
 
-    public Type getPlaintextColumnType() {
+    public JdbcType getPlaintextColumnType() {
         return plaintextColumnType;
     }
 
-    public void setPlaintextColumnType(Type plaintextColumnType) {
+    public void setPlaintextColumnType(JdbcType plaintextColumnType) {
         this.plaintextColumnType = plaintextColumnType;
     }
 
@@ -133,11 +133,11 @@ public class EncryptedTypeModel {
         this.ciphertextColumnName = ciphertextColumnName;
     }
 
-    public Type getCiphertextColumnType() {
+    public JdbcType getCiphertextColumnType() {
         return ciphertextColumnType;
     }
 
-    public void setCiphertextColumnType(Type ciphertextColumnType) {
+    public void setCiphertextColumnType(JdbcType ciphertextColumnType) {
         this.ciphertextColumnType = ciphertextColumnType;
     }
 
@@ -157,11 +157,11 @@ public class EncryptedTypeModel {
         this.ciphertextHeaderColumnName = ciphertextHeaderColumnName;
     }
 
-    public Type getCiphertextHeaderColumnType() {
+    public JdbcType getCiphertextHeaderColumnType() {
         return ciphertextHeaderColumnType;
     }
 
-    public void setCiphertextHeaderColumnType(Type ciphertextHeaderColumnType) {
+    public void setCiphertextHeaderColumnType(JdbcType ciphertextHeaderColumnType) {
         this.ciphertextHeaderColumnType = ciphertextHeaderColumnType;
     }
 

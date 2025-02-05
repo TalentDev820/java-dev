@@ -1,9 +1,9 @@
 package com.r.crypto.encryption.hibernate;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,8 +84,8 @@ public class LoggingInterceptor implements Interceptor {
     }
 
     @Override
-    public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
-        logger.debug("instantiate");
+    public Object instantiate(String entityName, RepresentationMode representationMode, Object id) throws CallbackException {
+        logger.debug("instantiate: entityName={}, representationMode={}, id={}", entityName, representationMode, id);
         return null;
     }
 
@@ -114,12 +114,5 @@ public class LoggingInterceptor implements Interceptor {
     @Override
     public void afterTransactionCompletion(Transaction tx) {
         logger.debug("afterTransactionCompletion");
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public String onPrepareStatement(String sql) {
-        logger.debug("onPrepareStatement");
-        return null;
     }
 }

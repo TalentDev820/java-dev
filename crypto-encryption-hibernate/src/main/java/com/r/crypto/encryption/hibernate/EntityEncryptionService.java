@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.persistence.CascadeType;
+import jakarta.persistence.CascadeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

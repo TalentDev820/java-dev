@@ -1,9 +1,9 @@
 package com.r.crypto.encryption.hibernate;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,9 +152,9 @@ public class DebugInterceptor implements Interceptor {
     }
 
     @Override
-    public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
-        logger.trace("instantiate: entityName={} entityMode={} id={}", entityName, entityMode, id);
-        record("instantiate", entityName, entityMode, id);
+    public Object instantiate(String entityName, RepresentationMode representationMode, Object id) throws CallbackException {
+        logger.trace("instantiate: entityName={} representationMode={} id={}", entityName, representationMode, id);
+        record("instantiate", entityName, representationMode, id);
         return null;
     }
 
@@ -188,15 +188,6 @@ public class DebugInterceptor implements Interceptor {
     public void afterTransactionCompletion(Transaction tx) {
         logger.trace("afterTransactionCompletion: tx={}", tx);
         record("afterTransactionCompletion", toSimpleString(tx), tx.getStatus().toString());
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public String onPrepareStatement(String sql) {
-        logger.trace("onPrepareStatement: sql={}", sql);
-        String operation = (sql == null) ? null : sql.split(" ")[0];
-        record("onPrepareStatement", operation, sql);
-        return null;
     }
 
     private void record(String method, String operation, Object... data) {

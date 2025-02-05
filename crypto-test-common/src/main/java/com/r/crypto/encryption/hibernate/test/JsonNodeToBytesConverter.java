@@ -3,7 +3,7 @@ package com.r.crypto.encryption.hibernate.test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import static com.r.crypto.util.ExceptionWrapper.wrap;
 

@@ -23,9 +23,11 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <spring-retry.version>1.2.5.RELEASE</spring-retry.version>
-        <spring-vault.version>2.3.3</spring-vault.version>
-        <spring-boot.version>2.2.13.RELEASE</spring-boot.version>
+        <org.springframework.version>6.1.16</org.springframework.version>
+        <org.hibernate.version>6.3.1.Final</org.hibernate.version>
+        <spring-boot.version>3.3.7</spring-boot.version>
+        <spring-retry.version>2.0.11</spring-retry.version>
+        <spring-vault.version>3.1.1</spring-vault.version>
         <datasource-proxy.version>1.9</datasource-proxy.version>
         <eddsa-java.version>0.3.0</eddsa-java.version>
         <querydsl.version>4.2.2</querydsl.version>
@@ -47,7 +49,6 @@
         <org.codehaus.janino.version>2.6.1</org.codehaus.janino.version>
         <org.eclipse.jetty.version>9.4.56.v20240826</org.eclipse.jetty.version>
         <org.hamcrest.version>1.3</org.hamcrest.version>
-        <org.hibernate.version>5.5.6.Final</org.hibernate.version>
         <org.hibernate.hibernate-validator.version>6.2.0.Final</org.hibernate.hibernate-validator.version>
         <org.immutables.value.version>2.8.2</org.immutables.value.version>
         <org.jacoco.version>0.8.11</org.jacoco.version>
@@ -55,7 +56,6 @@
         <org.mockito.version>3.12.4</org.mockito.version>
         <org.postgresql.postgresql.version>42.4.3</org.postgresql.postgresql.version>
         <org.slf4j.version>1.7.25</org.slf4j.version>
-        <org.springframework.version>5.3.39</org.springframework.version>
         <org.springframework.amqp.version>2.3.12</org.springframework.amqp.version>
         <org.springframework.data.version>2.5.0</org.springframework.data.version>
         <org.springframework.cloud.spring-cloud-function.version>3.2.4</org.springframework.cloud.spring-cloud-function.version>

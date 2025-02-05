@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;

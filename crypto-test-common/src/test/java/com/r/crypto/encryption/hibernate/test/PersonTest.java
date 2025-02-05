@@ -54,9 +54,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 import javax.sql.DataSource;
 import java.sql.JDBCType;
 import java.sql.ResultSet;
@@ -337,9 +337,9 @@ public class PersonTest extends LoggingTest {
                 saveMode,
                 name, email, json,
                 0,          // same initial row version
-                0, 0, 1,    // no updates, only the getOne query
+                0, 0, 1,    // no updates, only the getById query
                 entityManagerClear, entityManagerFlush,
-                () -> personRepository.save(personRepository.getOne(person.getId()))
+                () -> personRepository.save(personRepository.getById(person.getId()))
         );
 
         // We change the name only, but all the EncryptedObjects will be
@@ -350,10 +350,10 @@ public class PersonTest extends LoggingTest {
                 updateMode,
                 name, email, json,
                 1,          // row updated to new version
-                0, 1, 1,    // single update and getOne query
+                0, 1, 1,    // single update and getById query
                 entityManagerClear, entityManagerFlush,
                 () -> {
-                    PersonEntity p = personRepository.getOne(person.getId());
+                    PersonEntity p = personRepository.getById(person.getId());
                     p.setName("name2");
                     return p; // JPA will perform an implicit save()
                 }
@@ -366,10 +366,10 @@ public class PersonTest extends LoggingTest {
                 updateMode,
                 name, email, json,
                 1,          // no updates so row version the same
-                0, 0, 1,    // just the getOne query
+                0, 0, 1,    // just the getById query
                 entityManagerClear, entityManagerFlush,
                 () -> {
-                    PersonEntity p = personRepository.getOne(person.getId());
+                    PersonEntity p = personRepository.getById(person.getId());
                     // Calls to updatePlaintext will nuke encryptedPlaintext/plaintext,
                     // but EncryptedType.equals should determine no db update needed
                     p.setName(nameForLambda);
@@ -461,7 +461,7 @@ public class PersonTest extends LoggingTest {
             System.out.println("after execute");
             long rId = r.getId();
             long moneygramId = moneygram.getId();
-            PersonEntity fetchedEntity = personRepository.getOne(personEntity.getId());
+            PersonEntity fetchedEntity = personRepository.getById(personEntity.getId());
             System.out.println("validating fetchedEntity=" + fetchedEntity);
             assertNotSame(personEntity, fetchedEntity);
             assertEquals(fetchedEntity.getEncryptionJobId(), "hi");

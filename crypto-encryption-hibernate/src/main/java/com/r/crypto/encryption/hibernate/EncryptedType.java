@@ -6,20 +6,25 @@ import com.r.crypto.encryption.hibernate.converter.IdentityConverter;
 import com.r.crypto.encryption.migration.MigrationMode;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Columns;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.spi.ValueAccess;
+import org.hibernate.type.descriptor.java.ByteArrayJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.orm.jpa.vendor.Database;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Converts;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -47,7 +52,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
     protected String entityField;
     protected EncryptedTypeModel typeModel;
     protected String[] propertyNames;
-    protected Type[] propertyTypes;
+    protected JdbcType[] propertyTypes;
 
     public static EncryptedTypeModel getTypeModel(String entityField) {
         return entityFieldToTypeModelMap.get(entityField);
@@ -62,6 +67,18 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
             typeModel = entityFieldToTypeModelMap.computeIfAbsent(entityField, EncryptedTypeModel::new);
         }
         return typeModel;
+    }
+
+    @Override
+    public Class<?> embeddable() {
+        // TO-DO: is this what we want this method to return?
+        return Cryptotext.class;
+    }
+
+    @Override
+    public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+        // TO-DO: is this what we want this method to return?
+        return new Cryptotext();
     }
 
     @SuppressWarnings("unchecked")
@@ -130,15 +147,15 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         }
 
         if (plaintextColumnType() == null) {
-            typeModel.setPlaintextColumnType(StringType.INSTANCE);
+            typeModel.setPlaintextColumnType(VarcharJdbcType.INSTANCE);
         }
 
         if (ciphertextColumnType() == null) {
-            typeModel.setCiphertextColumnType(BinaryType.INSTANCE);
+            typeModel.setCiphertextColumnType(VarbinaryJdbcType.INSTANCE);
         }
 
         if (ciphertextHeaderColumnType() == null) {
-            typeModel.setCiphertextHeaderColumnType(StringType.INSTANCE);
+            typeModel.setCiphertextHeaderColumnType(VarcharJdbcType.INSTANCE);
         }
 
         if (columnConverter() == null) {
@@ -170,7 +187,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
             columnCount += 2;
         }
         propertyNames = new String[columnCount];
-        propertyTypes = new Type[columnCount];
+        propertyTypes = new JdbcType[columnCount];
 
         if (typeModel.hasPlaintextColumn()) {
             propertyNames[plaintextColumnIndex()] = "plaintext";
@@ -189,7 +206,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         logger.debug("setParameterValues this={} typeModel={}", this, typeModel);
     }
 
-    private Type findType(Properties parameters, String property, Type defaultType, Database database) {
+    private JdbcType findType(Properties parameters, String property, JdbcType defaultType, Database database) {
         return wrap(RCryptoEncryptionException.class, () -> {
             String typeName = parameters.getProperty(property + "." + database.name());
             if (typeName == null) {
@@ -203,23 +220,13 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
                 typeName = "org.hibernate.type." + typeName;
             }
 
-            Class<Type> typeClass = cast(Class.forName(typeName));
+            Class<JdbcType> typeClass = cast(Class.forName(typeName));
             try {
-                return (Type) typeClass.getField("INSTANCE").get(null);
+                return (JdbcType) typeClass.getField("INSTANCE").get(null);
             } catch (NoSuchFieldException e) {
                 return typeClass.getDeclaredConstructor().newInstance();
             }
         });
-    }
-
-    @Override
-    public String[] getPropertyNames() {
-        return propertyNames;
-    }
-
-    @Override
-    public Type[] getPropertyTypes() {
-        return propertyTypes;
     }
 
     @Override
@@ -243,7 +250,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         }
     }
 
-    @Override
+    // TO-DO: Is this code needed? This used to be an over-ridden method, but this method is no longer part of the interface.
     public void setPropertyValue(Object component, int propertyIndex, Object value) {
         trace(logger,
                 () -> String.format("setPropertyValue component=%s propertyIndex=%d value=%s",
@@ -290,14 +297,14 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
     }
 
     @Override
-    public Serializable disassemble(Object value, SharedSessionContractImplementor session) {
+    public Serializable disassemble(Object value) {
         Serializable result = value == null ? null : new SerializedEncryptedObject(cast(value));
         logger.trace("disassemble: value={} result={}", value, result);
         return result;
     }
 
     @Override
-    public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
+    public Object assemble(Serializable cached, Object owner) {
         Object result = cached == null ? null : ((SerializedEncryptedObject) cached).deserialize();
         logger.trace("assemble: cached={} result={}", cached, result);
         return result;
@@ -315,7 +322,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
     }
 
     @Override
-    public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+    public Object replace(Object original, Object target, Object owner) throws HibernateException {
         EncryptedObject<Object> src = cast(original);
         EncryptedObject<Object> dst = cast(target);
         SerializedEncryptedObject.copy(src, dst);
@@ -339,10 +346,11 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         return result;
     }
 
-    @Override
+    // TO-DO: Is this code needed? This used to be an over-ridden method, but this method is no longer part of the interface.
     public void nullSafeSet(PreparedStatement statement, Object value, int index, SharedSessionContractImplementor session)
             throws HibernateException, SQLException {
         logger.trace("nullSafeSet: index={} value={}", index, value);
+
 
         EncryptedObject<Object> encryptedObject = requireNonNull(cast(value));
         MigrationMode saveMode = requireNonNull(encryptedObject.getSaveMode());
@@ -351,21 +359,26 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
             Object dbPlaintext = saveMode.supportsPlaintext()
                     ? typeModel.convertPlaintextToColumn(encryptedObject.getPlaintext())
                     : null;
-            plaintextColumnType().nullSafeSet(statement, dbPlaintext, index + plaintextColumnIndex(), session);
+
+            // Get the correct Binder with JavaType for String (assuming plaintext is a String)
+            plaintextColumnType().getBinder(StringJavaType.INSTANCE).bind(
+                    statement,
+                    null, // TO-DO: this used to be: dbPlaintext,
+                    index + plaintextColumnIndex(),
+                    session);
         }
 
         if (hasCiphertextColumn()) {
-            Cryptotext cryptotext = saveMode.supportsCiphertext()
-                    ? encryptedObject.getCryptotext()
-                    : null;
-            ciphertextColumnType().nullSafeSet(
+            Cryptotext cryptotext = saveMode.supportsCiphertext() ? encryptedObject.getCryptotext() : null;
+
+            ciphertextColumnType().getBinder(ByteArrayJavaType.INSTANCE).bind(
                     statement,
-                    cryptotext == null ? null : cryptotext.getData(),
+                    null, // TO-DO: this used to be: cryptotext == null ? null : cryptotext.getData(),
                     index + ciphertextColumnIndex(),
                     session
             );
 
-            ciphertextHeaderColumnType().nullSafeSet(
+            ciphertextHeaderColumnType().getBinder(StringJavaType.INSTANCE).bind(
                     statement,
                     cryptotext == null ? null : cryptotext.header(),
                     index + ciphertextHeaderColumnIndex(),
@@ -376,26 +389,42 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         encryptedObject.setLifecycle(WRITTEN);
     }
 
-    @Override
+    // TO-DO: Is this code needed? This used to be an over-ridden method, but this method is no longer part of the interface.
     public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
             throws HibernateException, SQLException {
         EncryptedObject<Object> encryptedObject = model().createEncryptedObject();
 
         if (hasPlaintextColumn()) {
-            Object dbPlaintext = plaintextColumnType().nullSafeGet(rs, names[plaintextColumnIndex()], session, owner);
+            // Retrieve the plaintext value using JdbcType
+            JdbcType plaintextJdbcType = plaintextColumnType();
+            // The correct JavaType for the extracted column (assuming it's a String)
+            JavaType<?> plaintextJavaType = StringJavaType.INSTANCE;
+            // Now call getExtractor with the correct JavaType
+            Object dbPlaintext = plaintextJdbcType.getExtractor(plaintextJavaType).extract(rs, plaintextColumnIndex(), session);
+
+            // Convert the column data to plaintext
             encryptedObject.setPlaintext(typeModel.convertColumnToPlaintext(dbPlaintext));
         }
 
         if (hasCiphertextColumn()) {
-            byte[] ciphertext = (byte[]) ciphertextColumnType().nullSafeGet(rs, names[ciphertextColumnIndex()], session, owner);
-            String header = (String) ciphertextHeaderColumnType().nullSafeGet(rs, names[ciphertextHeaderColumnIndex()], session, owner);
+            // Retrieve the ciphertext value using JdbcType
+            JdbcType ciphertextJdbcType = ciphertextColumnType();
+            JavaType<?> ciphertextJavaType = ByteArrayJavaType.INSTANCE; // assuming byte[] for ciphertext
+            byte[] ciphertext = (byte[]) ciphertextJdbcType.getExtractor(ciphertextJavaType).extract(rs, ciphertextColumnIndex(), session);
+
+            // Retrieve the ciphertext header using JdbcType
+            JdbcType headerJdbcType = ciphertextHeaderColumnType();
+            JavaType<?> headerJavaType = StringJavaType.INSTANCE; // assuming String for header
+            String header = (String) headerJdbcType.getExtractor(headerJavaType).extract(rs, ciphertextHeaderColumnIndex(), session);
+
+            // Parse the cryptotext from header and ciphertext
             Cryptotext cryptotext = Cryptotext.parse(header, ciphertext);
             encryptedObject.setCryptotext(cryptotext);
             encryptedObject.setTenant(cryptotext == null ? null : cryptotext.getOption("tenant"));
         }
 
         encryptedObject.setLifecycle(READ);
-        logger.trace("nullSafeGet: result={}", encryptedObject);
+        logger.trace("getEncryptedObjectFromResultSet: result={}", encryptedObject);
         return encryptedObject;
     }
 
@@ -411,7 +440,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         return model().getPlaintextColumnName();
     }
 
-    public Type plaintextColumnType() {
+    public JdbcType plaintextColumnType() {
         return model().getPlaintextColumnType();
     }
 
@@ -435,7 +464,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         return model().getCiphertextColumnName();
     }
 
-    public Type ciphertextColumnType() {
+    public JdbcType ciphertextColumnType() {
         return model().getCiphertextColumnType();
     }
 
@@ -447,7 +476,7 @@ public class EncryptedType implements CompositeUserType, DynamicParameterizedTyp
         return model().getCiphertextHeaderColumnName();
     }
 
-    public Type ciphertextHeaderColumnType() {
+    public JdbcType ciphertextHeaderColumnType() {
         return model().getCiphertextHeaderColumnType();
     }
 

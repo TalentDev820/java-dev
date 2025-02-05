@@ -15,7 +15,7 @@ import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
