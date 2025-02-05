@@ -2,7 +2,7 @@ package com.r.crypto.encryption.hibernate;
 
 import org.testng.annotations.Test;
 
-import javax.persistence.CascadeType;
+import jakarta.persistence.CascadeType;
 import java.util.HashSet;
 import java.util.Set;
 

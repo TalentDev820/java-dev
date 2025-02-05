@@ -1,7 +1,6 @@
 package com.r.crypto.encryption.hibernate;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
 import org.hibernate.type.Type;
@@ -84,9 +83,9 @@ public class LoggingInterceptor implements Interceptor {
     }
 
     @Override
-    public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
+    public Object instantiate(String entityName, Serializable id) throws CallbackException {
         logger.debug("instantiate");
-        return null;
+        return null; // You no longer need EntityMode here
     }
 
     @Override
